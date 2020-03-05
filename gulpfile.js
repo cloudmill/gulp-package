@@ -12,44 +12,44 @@ let gulp = require("gulp"),
   filter = require("filter"),
   babel = require("gulp-babel");
 
-let dirApp = "./app/";
 let dirDist = "./dist/";
+let dirApp = "./app/";
 let _ = {
-  app: {
-    images: dirApp + "images",
-    fonts: dirApp + "fonts",
-    js: dirApp + "js",
-    css: dirApp + "css",
+  dist: {
+    images: dirDist + "images",
+    fonts: dirDist + "fonts",
+    js: dirDist + "js",
+    css: dirDist + "css",
     out: "../../"
   },
   fonts: {
-    dir: dirDist + "static/fonts/",
+    dir: dirApp + "static/fonts/",
     select: "*.ttf"
   },
   minImg: {
-    dir: dirDist + "static/images/",
+    dir: dirApp + "static/images/",
     select: "*.*"
   },
   sprite: {
     png: {
-      dir: dirDist + "static/images/pngSprite/",
+      dir: dirApp + "static/images/pngSprite/",
       select: "*.png"
     },
     svg: {
-      dir: dirDist + "static/images/svgSprite/",
+      dir: dirApp + "static/images/svgSprite/",
       select: "*.svg"
     }
   },
   pug: {
-    dir: dirDist + "templates/",
+    dir: dirApp + "templates/",
     select: {
       pages: "pages/*.pug",
       all: "**/*.pug"
     }
   },
   style: {
-    base: dirDist + "scss/base/",
-    dir: dirDist + "scss/",
+    base: dirApp + "scss/base/",
+    dir: dirApp + "scss/",
     select: {
       conv: "*.scss",
       all: "**/*.scss"
@@ -62,7 +62,7 @@ let _ = {
       "node_modules/swiper/js/swiper.js"
     ],
     select: "*.js",
-    dir: dirDist + "scripts/"
+    dir: dirApp + "scripts/"
   }
 };
 
@@ -70,7 +70,7 @@ gulp.task("scss", function() {
   return gulp
     .src(_.style.dir + _.style.select.conv)
     .pipe(sass({ outputStyle: "compressed" }))
-    .pipe(gulp.dest(_.app.css))
+    .pipe(gulp.dest(_.dist.css))
     .pipe(browserSyns.reload({ stream: true }));
 });
 
@@ -79,7 +79,7 @@ gulp.task("libs-js", function() {
     .src(_.js.libs)
     .pipe(concat("libs.min.js"))
     .pipe(uglify())
-    .pipe(gulp.dest(_.app.js))
+    .pipe(gulp.dest(_.dist.js))
     .pipe(browserSyns.reload({ stream: true }));
 });
 
@@ -91,7 +91,7 @@ gulp.task("js", function() {
         presets: ["@babel/env"]
       })
     )
-    .pipe(gulp.dest(_.app.js))
+    .pipe(gulp.dest(_.dist.js))
     .pipe(browserSyns.reload({ stream: true }));
 });
 
@@ -99,7 +99,7 @@ gulp.task("images", function() {
   return gulp
     .src(_.minImg.dir + _.minImg.select)
     .pipe(imageMin())
-    .pipe(gulp.dest(_.app.images))
+    .pipe(gulp.dest(_.dist.images))
     .pipe(browserSyns.reload({ stream: true }));
 });
 
@@ -107,7 +107,7 @@ gulp.task("ttf2woff2", function() {
   return gulp
     .src(_.fonts.dir + _.fonts.select)
     .pipe(ttf2woff2())
-    .pipe(gulp.dest(_.app.fonts));
+    .pipe(gulp.dest(_.dist.fonts));
 });
 
 gulp.task("pngSprite", function() {
@@ -125,7 +125,7 @@ gulp.task("pngSprite", function() {
       })
     );
   var cssStream = spriteData.css.pipe(gulp.dest(_.style.base)); // путь, куда сохраняем стили
-  var imgStream = spriteData.img.pipe(gulp.dest(_.app.images)); // путь, куда сохраняем картинку
+  var imgStream = spriteData.img.pipe(gulp.dest(_.dist.images)); // путь, куда сохраняем картинку
 
   return merge(imgStream, cssStream);
 });
@@ -136,14 +136,14 @@ gulp.task("svgSprite", function() {
     .pipe(
       svgSprite({
         selector: "svg-%f",
-        cssFile: _.app.out + _.style.base + "svgSprite.scss",
+        cssFile: _.dist.out + _.style.base + "svgSprite.scss",
         svg: {
           sprite: "sprite.svg"
         },
         preview: false
       })
     )
-    .pipe(gulp.dest(_.app.images));
+    .pipe(gulp.dest(_.dist.images));
 });
 
 gulp.task("pug", function buildHTML() {
@@ -154,14 +154,14 @@ gulp.task("pug", function buildHTML() {
         pretty: true
       })
     )
-    .pipe(gulp.dest(dirApp))
+    .pipe(gulp.dest(dirDist))
     .pipe(browserSyns.reload({ stream: true }));
 });
 
 gulp.task("watch", function() {
   //Стили и скрипты
-  gulp.watch(_.style.dist + _.style.select.all, gulp.parallel("scss"));
-  gulp.watch(_.js.dist + _.js.select, gulp.parallel("js"));
+  gulp.watch(_.style.dir + _.style.select.all, gulp.parallel("scss"));
+  gulp.watch(_.js.dir + _.js.select, gulp.parallel("js"));
 
   //Сборка страниц из шаблонов
   gulp.watch(_.pug.dir + _.pug.select.all, gulp.parallel("pug"));
@@ -171,11 +171,11 @@ gulp.task("watch", function() {
 
   //спрайты
   gulp.watch(
-    _.sprite.png.dist + _.sprite.png.select,
+    _.sprite.png.dir + _.sprite.png.select,
     gulp.parallel("pngSprite")
   );
   gulp.watch(
-    _.sprite.svg.dist + _.sprite.svg.select,
+    _.sprite.svg.dir + _.sprite.svg.select,
     gulp.parallel("svgSprite")
   );
 
@@ -186,7 +186,7 @@ gulp.task("watch", function() {
 gulp.task("browser-sync", function() {
   browserSyns.init({
     server: {
-      baseDir: dirApp
+      baseDir: dirDist
     }
   });
 });
